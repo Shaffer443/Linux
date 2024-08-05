@@ -1,5 +1,5 @@
-#Informações sobre o host(Dispositivo):
+# Informações sobre o host(Dispositivo):
 
 ```
-hostnamectl
+$ hostnamectl
 ```
