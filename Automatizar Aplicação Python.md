@@ -276,4 +276,55 @@ Agora, sempre que o servidor Ubuntu for iniciado, sua aplicação será carregad
      sudo systemctl disable avisorede.service
      ```
 
+-----    
+
+Aqui estão algumas verificações e etapas que você pode seguir para corrigir isso:
+1. Recarregar o systemd
+
+Após editar o arquivo de serviço, é essencial recarregar o systemd para que ele reconheça as mudanças. Execute os seguintes comandos:
+
+sudo systemctl daemon-reload
+
+Isso recarrega todas as unidades de serviço configuradas, garantindo que qualquer modificação seja aplicada.
+2. Verificar se o arquivo foi editado corretamente
+
+Certifique-se de que o caminho correto foi usado no arquivo de serviço:
+
+ExecStart=/usr/bin/python3.6 /home/gti/AvisoRede/main.py
+
+Se o arquivo de serviço não foi salvo corretamente, pode ser que ele ainda esteja utilizando o caminho errado. Reabra o arquivo e confirme:
+
+sudo nano /etc/systemd/system/avisorede.service
+
+3. Verifique o caminho do arquivo diretamente no sistema de arquivos
+
+Abra o terminal e certifique-se de que o arquivo main.py realmente existe no diretório /home/gti/AvisoRede/:
+
+ls /home/gti/AvisoRede/main.py
+
+Se o arquivo não existir ou estiver com um nome diferente (por exemplo, AvisoREde com uma capitalização diferente), isso pode explicar a discrepância nos logs.
+4. Reiniciar o serviço
+
+Depois de garantir que o caminho está correto, reinicie o serviço:
+
+sudo systemctl restart avisorede.service
+
+5. Verificar os logs novamente
+
+Agora, verifique os logs para ver se a mudança foi aplicada corretamente:
+
+journalctl -u avisorede.service -f
+
+6. Limpar possíveis caches de serviços antigos
+
+Se o problema persistir, é possível que o systemd esteja tentando iniciar um serviço antigo, ou que tenha algum cache de configuração.
+
+Para garantir que o systemd está rodando a versão mais recente do serviço, você pode parar o serviço, limpar qualquer cache de status e reiniciar:
+
+sudo systemctl stop avisorede.service
+sudo systemctl reset-failed avisorede.service
+sudo systemctl start avisorede.service
+
+Isso garantirá que o systemd não tente reiniciar o serviço em um estado incorreto.
+
 
