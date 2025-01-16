@@ -377,6 +377,50 @@ journalctl -u avisorede.service -f
 
 Verifique também se o seu script está funcionando corretamente sem interatividade, como seria no modo de serviço. Se ele depende de algum tipo de entrada do terminal ou interatividade, você pode ter problemas ao executá-lo como um serviço.
 
-Se você precisar de mais ajuda para ajustar o comportamento do seu script, me avise!
+---
+O status `code=exited, status=2/INVALIDARGUMENT` indica que o processo principal do serviço (`ExecStart`) terminou com um código de saída 2 e que o `systemd` interpretou esse código como um erro devido a um argumento inválido.
+
+No contexto do seu caso, isso geralmente ocorre por um dos seguintes motivos:
+
+1. **Caminho ou Arquivo Incorreto**:
+   O Python não conseguiu localizar o arquivo especificado no comando `ExecStart`. Isso pode ser um erro de digitação no caminho ou no nome do arquivo (como `/home/gti/AvisoREde/main.py` em vez de `/home/gti/AvisoRede/main.py`).
+
+2. **Erro no Script Python**:
+   Se o script Python é executado, mas contém erros na lógica ou parâmetros fornecidos ao interpretador, ele pode sair com código de erro 2.
+
+3. **Argumentos Incorretos no ExecStart**:
+   Caso `ExecStart` contenha opções ou argumentos não reconhecidos pelo interpretador Python, ele também pode gerar esse erro.
+
+4. **Permissões Insuficientes**:
+   O usuário especificado (`User=gti`) pode não ter permissões para acessar o arquivo ou diretório.
+
+---
+
+### Soluções:
+- **Verificar o Caminho**: Certifique-se de que o caminho em `ExecStart` está correto e o arquivo existe:
+  ```bash
+  ls -l /home/gti/AvisoRede/main.py
+  ```
+
+- **Testar o Script Manualmente**:
+  Execute o comando manualmente como o mesmo usuário configurado no serviço para identificar erros:
+  ```bash
+  sudo -u gti /usr/bin/python3.6 /home/gti/AvisoRede/main.py
+  ```
+
+- **Verificar o Script Python**:
+  Inspecione o script para erros de lógica ou problemas nos `print()` ou configurações iniciais.
+
+- **Permissões**:
+  Verifique se o usuário `gti` tem permissões no arquivo e diretórios:
+  ```bash
+  chmod -R 755 /home/gti/AvisoRede
+  chown -R gti:gti /home/gti/AvisoRede
+  ```
+
+- **Logs para Depuração**:
+  Habilite o redirecionamento de `StandardOutput` e `StandardError` no arquivo de configuração do serviço para capturar mensagens de erro.
+
+Se o erro persistir após essas verificações, compartilhe os logs para análise mais detalhada.
 
 
