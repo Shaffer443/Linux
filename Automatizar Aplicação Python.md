@@ -282,49 +282,101 @@ Aqui estão algumas verificações e etapas que você pode seguir para corrigir 
 1. Recarregar o systemd
 
 Após editar o arquivo de serviço, é essencial recarregar o systemd para que ele reconheça as mudanças. Execute os seguintes comandos:
-
+ ```bash
 sudo systemctl daemon-reload
-
+```
 Isso recarrega todas as unidades de serviço configuradas, garantindo que qualquer modificação seja aplicada.
 2. Verificar se o arquivo foi editado corretamente
 
 Certifique-se de que o caminho correto foi usado no arquivo de serviço:
-
+ ```bash
 ExecStart=/usr/bin/python3.6 /home/gti/AvisoRede/main.py
-
+```
 Se o arquivo de serviço não foi salvo corretamente, pode ser que ele ainda esteja utilizando o caminho errado. Reabra o arquivo e confirme:
-
+ ```bash
 sudo nano /etc/systemd/system/avisorede.service
-
+```
 3. Verifique o caminho do arquivo diretamente no sistema de arquivos
 
 Abra o terminal e certifique-se de que o arquivo main.py realmente existe no diretório /home/gti/AvisoRede/:
-
+ ```bash
 ls /home/gti/AvisoRede/main.py
-
+```
 Se o arquivo não existir ou estiver com um nome diferente (por exemplo, AvisoREde com uma capitalização diferente), isso pode explicar a discrepância nos logs.
 4. Reiniciar o serviço
 
 Depois de garantir que o caminho está correto, reinicie o serviço:
-
+ ```bash
 sudo systemctl restart avisorede.service
-
+```
 5. Verificar os logs novamente
 
 Agora, verifique os logs para ver se a mudança foi aplicada corretamente:
-
+ ```bash
 journalctl -u avisorede.service -f
-
+```
 6. Limpar possíveis caches de serviços antigos
 
 Se o problema persistir, é possível que o systemd esteja tentando iniciar um serviço antigo, ou que tenha algum cache de configuração.
 
 Para garantir que o systemd está rodando a versão mais recente do serviço, você pode parar o serviço, limpar qualquer cache de status e reiniciar:
-
+ ```bash
 sudo systemctl stop avisorede.service
 sudo systemctl reset-failed avisorede.service
 sudo systemctl start avisorede.service
-
+```
 Isso garantirá que o systemd não tente reiniciar o serviço em um estado incorreto.
+
+---
+
+Sim, isso pode ser um problema dependendo de como os `print()` estão sendo gerados e onde o processo está sendo executado. O `systemd` não tem uma interface de terminal, então se o `print()` está tentando imprimir no terminal ou console e o serviço não tem acesso a um terminal interativo, isso pode gerar erros ou falhas.
+
+Uma forma de resolver isso seria direcionar a saída do seu script para um arquivo de log ou para o `journal` do `systemd` para garantir que você consiga acompanhar as saídas sem depender do terminal. Para isso, você pode ajustar a configuração do seu `service` e configurar o `stdout` e o `stderr` para registrar os logs em arquivos ou no `journal`:
+
+### 1. Alterar a configuração do serviço para capturar a saída:
+
+Você pode adicionar as seguintes linhas ao seu arquivo de unidade (`avisorede.service`) para redirecionar a saída para arquivos de log:
+
+```ini
+[Service]
+User=gti
+WorkingDirectory=/home/gti/AvisoRede
+ExecStart=/usr/bin/python3.6 /home/gti/AvisoRede/main.py
+Restart=always
+StandardOutput=append:/var/log/avisorede.log
+StandardError=append:/var/log/avisorede.log
+```
+
+Isso irá gravar as saídas do `print()` e qualquer erro no arquivo `/var/log/avisorede.log`. Você pode visualizar esse arquivo com o comando:
+
+```bash
+tail -f /var/log/avisorede.log
+```
+
+### 2. Usar `systemd` journal para capturar a saída:
+
+Se você preferir não usar arquivos de log, pode configurar para que as saídas sejam capturadas pelo `journal` do `systemd` e você pode acessá-las diretamente com `journalctl`.
+
+```ini
+[Service]
+User=gti
+WorkingDirectory=/home/gti/AvisoRede
+ExecStart=/usr/bin/python3.6 /home/gti/AvisoRede/main.py
+Restart=always
+StandardOutput=journal
+StandardError=journal
+```
+
+Dessa forma, as saídas do seu script aparecerão diretamente no `journalctl` e você pode monitorá-las com:
+
+```bash
+journalctl -u avisorede.service -f
+```
+
+### 3. Garantir que o script esteja funcionando corretamente em segundo plano:
+
+Verifique também se o seu script está funcionando corretamente sem interatividade, como seria no modo de serviço. Se ele depende de algum tipo de entrada do terminal ou interatividade, você pode ter problemas ao executá-lo como um serviço.
+
+Se você precisar de mais ajuda para ajustar o comportamento do seu script, me avise!
 
 
