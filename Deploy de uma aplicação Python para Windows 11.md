@@ -59,6 +59,81 @@ Para facilitar a distribuição, você pode criar um instalador usando ferrament
 - **Compartilhamento**: Disponibilize via e-mail, serviços em nuvem (Google Drive, Dropbox) ou armazenamento interno.
 
 ---
+Quando sua aplicação não possui interface gráfica (GUI), você pode verificar se ela está rodando ou funcionando corretamente de várias maneiras. Aqui estão alguns métodos para monitorar sua aplicação:
+
+---
+
+### **1. Verifique o Processo no Gerenciador de Tarefas**
+1. Abra o **Gerenciador de Tarefas** no Windows (Ctrl + Shift + Esc).
+2. Vá para a aba **Detalhes** ou **Processos**.
+3. Procure o nome do executável da sua aplicação (`nome_do_script.exe`).
+
+---
+
+### **2. Adicione Saídas no Console (Logs)**
+Mesmo que o terminal esteja oculto, você pode gerar saídas de log para um arquivo:
+
+1. Adicione logging ao seu script Python:
+   ```python
+   import logging
+
+   logging.basicConfig(
+       filename='app.log', 
+       level=logging.INFO, 
+       format='%(asctime)s - %(message)s'
+   )
+   logging.info('Aplicação iniciada com sucesso.')
+   # Coloque logs adicionais ao longo do código.
+   ```
+2. Quando o programa rodar, um arquivo chamado `app.log` será gerado com informações sobre o funcionamento.
+
+---
+
+### **3. Use um Arquivo de Controle**
+Crie um arquivo temporário para verificar se a aplicação está em execução:
+```python
+with open('status.txt', 'w') as f:
+    f.write('Aplicação rodando...\n')
+
+# Código principal aqui
+```
+Se o arquivo `status.txt` for criado ou atualizado, sua aplicação está ativa.
+
+---
+
+### **4. Monitoramento por Socket ou Porta**
+Se a aplicação usa rede ou escuta uma porta, você pode verificar se ela está ativa usando ferramentas como o `netstat`:
+1. No terminal do Windows, execute:
+   ```bash
+   netstat -an | find "LISTENING"
+   ```
+2. Procure a porta em que sua aplicação deveria estar rodando.
+
+---
+
+### **5. Debug Local com Logs Simples**
+Se você quiser testar temporariamente, remova o argumento `--windowed` ao criar o executável:
+```bash
+pyinstaller --onefile nome_do_script.py
+```
+Dessa forma, o terminal será exibido, permitindo que você veja as mensagens e debug.
+
+---
+
+### **6. Timer ou Indicadores de Atividade**
+Se sua aplicação executa tarefas continuamente ou periodicamente, adicione mensagens para indicar progresso:
+```python
+import time
+
+while True:
+    print("Aplicação rodando...")
+    time.sleep(10)
+```
+Isso será útil para identificar se está funcionando corretamente.
+
+---
+
+Essas opções ajudam você a monitorar e depurar sua aplicação sem uma interface gráfica. Caso queira implementar algo mais específico, é só dizer! 😊
 
 ### **7. Testar em Outros Computadores**
 1. Teste o executável em outro computador com Windows 11 para garantir compatibilidade.
