@@ -290,8 +290,146 @@ Se você quiser um atalho no **ambiente gráfico** do cliente, pode criar um arq
    chmod +x ~/Desktop/RodarScript.desktop
    ```
 
-Agora você pode clicar no atalho na área de trabalho para executar o script!
+---
+**Principais Falhas**
+O erro `Unit sshd.service not found` indica que o serviço **`sshd` (o daemon do OpenSSH)** não está instalado ou que o nome do serviço no seu sistema é diferente. Em distribuições baseadas em Ubuntu, o serviço é geralmente chamado de **`ssh`**, e não **`sshd`**.
+
+Aqui está o que você pode fazer para corrigir isso:
 
 ---
 
-Se precisar de mais ajuda ou algo não funcionar como esperado, me avise!
+### 1. Verificar o Nome do Serviço
+Em vez de `sshd`, tente reiniciar o serviço com o nome correto (`ssh`):
+```bash
+sudo systemctl restart ssh
+```
+
+Após isso, verifique se o serviço está ativo:
+```bash
+sudo systemctl status ssh
+```
+
+---
+
+### 2. Instalar o OpenSSH Server (se não estiver instalado)
+Se o erro persistir, é provável que o OpenSSH Server não esteja instalado no sistema. Para instalar, use o seguinte comando:
+```bash
+sudo apt update
+sudo apt install openssh-server -y
+```
+
+Depois de instalar, inicie e habilite o serviço:
+```bash
+sudo systemctl start ssh
+sudo systemctl enable ssh
+```
+
+Verifique se o serviço está rodando:
+```bash
+sudo systemctl status ssh
+```
+
+---
+
+### 3. Testar a Conexão SSH
+Agora, no cliente (sua máquina desktop), tente se conectar ao servidor novamente:
+```bash
+ssh shaffer443@192.168.1.100
+```
+
+Se o OpenSSH Server foi instalado corretamente, a conexão deve funcionar.
+
+---
+
+### 4. Verificar Logs em Caso de Problemas
+Se você ainda estiver enfrentando problemas, pode verificar os logs do serviço SSH para obter mais informações:
+```bash
+sudo journalctl -u ssh
+```
+
+---
+
+### Resumo
+1. Tente reiniciar o serviço usando:
+   ```bash
+   sudo systemctl restart ssh
+   ```
+2. Se o serviço não existir, instale o OpenSSH Server com:
+   ```bash
+   sudo apt install openssh-server -y
+   ```
+3. Inicie o serviço e habilite-o para iniciar automaticamente:
+   ```bash
+   sudo systemctl start ssh
+   sudo systemctl enable ssh
+   ```
+---
+
+Sim, você está **correto**! O erro `Failed to restart sshd.service: Unit sshd.service not found` está ocorrendo no seu **desktop (cliente)** porque você está tentando reiniciar o serviço SSH **localmente** no cliente (sua máquina desktop), onde o OpenSSH Server pode não estar instalado ou necessário. 
+
+No entanto, o **cliente SSH** (o programa que você usa para se conectar ao servidor) já está funcionando corretamente no desktop, como evidenciado pelo fato de que você consegue acessar o servidor Ubuntu remotamente. Isso significa que você não precisa do OpenSSH **Server** no desktop para se conectar a outros servidores — apenas o **cliente SSH** (que já vem instalado na maioria dos sistemas).
+
+---
+
+### Por que isso aconteceu?
+
+- O comando `sudo systemctl restart sshd` tenta reiniciar o serviço **servidor SSH (sshd)** localmente, mas no **desktop (cliente)** você provavelmente não tem o OpenSSH Server instalado porque ele não é necessário. 
+- Como resultado, o sistema responde com o erro `Unit sshd.service not found`.
+
+---
+
+### Explicação detalhada:
+1. **Servidor SSH (OpenSSH Server)**:
+   - O servidor SSH (`sshd`) é um serviço que permite que **outros dispositivos se conectem remotamente** ao sistema.
+   - Ele deve estar rodando no **servidor Ubuntu** que você está acessando remotamente.
+   - Você só precisa configurar e reiniciar o serviço SSH no **servidor remoto**, não no desktop.
+
+2. **Cliente SSH**:
+   - O cliente SSH (`ssh`) é o programa que você usa para **iniciar conexões remotas**. Ele é necessário no seu **desktop (cliente)**.
+   - O cliente SSH não precisa de um servidor SSH rodando no desktop para funcionar.
+
+---
+
+### Por que o problema ocorre ao usar múltiplas conexões SSH?
+
+- O problema **não tem relação direta com múltiplas conexões SSH**.
+- Mesmo que você esteja conectado a vários servidores remotamente, isso não impede que o cliente SSH funcione corretamente.
+- O erro é exclusivamente porque o desktop não tem o serviço `sshd` (servidor SSH) instalado localmente e, portanto, você não pode reiniciá-lo.
+
+---
+
+### Solução:
+Se você estava tentando reiniciar o **serviço SSH no servidor Ubuntu remoto**, faça isso diretamente **no servidor** (não no cliente). Aqui estão os passos:
+
+1. Conecte-se ao servidor remoto via SSH:
+   ```bash
+   ssh shaffer443@192.168.1.100
+   ```
+
+2. Depois de conectado, reinicie o serviço SSH no servidor:
+   ```bash
+   sudo systemctl restart ssh
+   ```
+
+3. Verifique se o serviço SSH está ativo no servidor:
+   ```bash
+   sudo systemctl status ssh
+   ```
+
+---
+
+### O que fazer no desktop (cliente)?
+
+Se o cliente SSH está funcionando (ou seja, você consegue acessar o servidor), **não há necessidade de mexer no SSH do desktop**. No entanto, se você precisa de um servidor SSH no desktop por algum motivo (para permitir conexões remotas para ele), você pode instalá-lo com:
+
+```bash
+sudo apt install openssh-server
+sudo systemctl start ssh
+sudo systemctl enable ssh
+```
+
+Caso contrário, ignore esse erro no cliente e concentre-se em gerenciar o SSH no servidor remoto.
+
+---
+
+
