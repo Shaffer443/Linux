@@ -82,4 +82,60 @@ Se o script precisa ser executado frequentemente e você deseja ainda mais facil
 - Certifique-se de que o X11 Forwarding está configurado corretamente entre o cliente e o servidor, conforme expliquei antes.
 - Lembre-se de que o alias só funciona no shell onde foi configurado. Se estiver usando outro shell, como Zsh, você deve configurá-lo no arquivo de inicialização correspondente (`~/.zshrc` em vez de `~/.bashrc`).
 
-Se precisar de mais ajuda, me avise!
+---
+
+Essa mensagem aparece quando você está gerando um par de chaves SSH com o comando `ssh-keygen`. Ela está perguntando se você deseja configurar uma **senha (passphrase)** para proteger sua chave privada.
+
+### Significado e opções:
+
+1. **`Enter passphrase (empty for no passphrase):`**
+   - O SSH está perguntando se você deseja configurar uma senha para a chave privada que está sendo criada. 
+   - Se você digitar uma senha aqui, a chave privada ficará protegida com essa senha, ou seja, toda vez que você usar a chave para autenticar no servidor, será necessário digitar a senha configurada.
+
+2. **`(empty for no passphrase)`**
+   - Se você **apenas pressionar `Enter`**, a chave privada será criada **sem senha**. Isso significa que você poderá usar a chave sem precisar digitar nada adicional, o que facilita automações e conexões rápidas.
+
+---
+
+### Devo usar uma passphrase?
+
+- **Use uma senha (passphrase)**:
+  - Recomendado em situações em que a segurança é extremamente importante, como em um ambiente corporativo ou quando a chave privada será armazenada em um dispositivo compartilhado.
+  - Adicionar uma senha garante que, mesmo que alguém obtenha acesso à sua chave privada, não poderá utilizá-la sem conhecer a senha.
+
+- **Não use uma senha**:
+  - Recomendado para automações ou se você quer evitar a necessidade de digitar uma senha toda vez que usar a chave.
+  - Se você confia na segurança do seu dispositivo local (onde a chave será armazenada) e configurou corretamente as permissões no arquivo da chave privada, pode deixar sem senha.
+
+---
+
+### Exemplo de uso:
+
+Ao rodar o comando:
+```bash
+ssh-keygen -t rsa
+```
+
+Você verá algo assim no terminal:
+
+```plaintext
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/usuario/.ssh/id_rsa): 
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+```
+
+- **Se você quiser uma senha**, digite uma senha e pressione `Enter`. Em seguida, digite novamente para confirmação.
+- **Se não quiser uma senha**, apenas pressione `Enter` nas duas perguntas relacionadas à passphrase.
+
+---
+
+### Nota sobre segurança:
+Se optar por **não usar senha**, certifique-se de que:
+1. Sua chave privada (`id_rsa`) esteja armazenada em um local seguro no seu computador.
+2. As permissões do arquivo sejam restritas apenas ao seu usuário:
+   ```bash
+   chmod 600 ~/.ssh/id_rsa
+   ```
+
+Assim, você evita que terceiros possam acessar e utilizar sua chave privada.
