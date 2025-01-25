@@ -138,4 +138,114 @@ Se optar por **não usar senha**, certifique-se de que:
    chmod 600 ~/.ssh/id_rsa
    ```
 
-Assim, você evita que terceiros possam acessar e utilizar sua chave privada.
+--- 
+
+Vamos configurar um **alias** no seu desktop para facilitar a execução do seu script Python no servidor, sem precisar digitar o comando completo todas as vezes. Seguindo as informações fornecidas, você pode criar o alias no seu desktop para conectar ao servidor e executar o script `main.py`.
+
+---
+
+### 1. Criando o Alias no Cliente
+1. **Abra o arquivo de configuração do shell** no cliente (desktop):
+   - Se você usa o Bash (o padrão na maioria das distribuições Linux):
+     ```bash
+     nano ~/.bashrc
+     ```
+   - Se você usa Zsh (como o Oh My Zsh):
+     ```bash
+     nano ~/.zshrc
+     ```
+
+2. **Adicione o alias no arquivo**:
+   Adicione a seguinte linha ao final do arquivo:
+   ```bash
+   alias rodar_script="ssh -X shaffer443@192.168.1.100 'cd /home/shaffer443/Interfacesgraficaspython && python3 main.py'"
+   ```
+
+   - `ssh -X` habilita o redirecionamento do X11 Forwarding, necessário para que o Tkinter mostre a interface gráfica no cliente.
+   - `cd /home/shaffer443/Interfacesgraficaspython` muda para o diretório onde o script está armazenado no servidor.
+   - `python3 main.py` executa o script.
+
+3. **Salve e feche o arquivo**:
+   - No editor `nano`, pressione `CTRL + O` para salvar o arquivo e `CTRL + X` para sair.
+
+4. **Recarregue o arquivo de configuração do shell**:
+   Execute o comando para aplicar as alterações no mesmo terminal:
+   ```bash
+   source ~/.bashrc
+   ```
+   ou, se estiver usando Zsh:
+   ```bash
+   source ~/.zshrc
+   ```
+
+---
+
+### 2. Testando o Alias
+Agora, você pode usar o alias para executar o script com um único comando:
+```bash
+rodar_script
+```
+
+O comando fará o seguinte:
+1. Conectará ao servidor `192.168.1.100` com o usuário `shaffer443` via SSH.
+2. Entrará no diretório `/home/shaffer443/Interfacesgraficaspython`.
+3. Executará o script `main.py` com Python 3.
+4. Exibirá a interface gráfica do Tkinter no seu cliente (desktop).
+
+---
+
+### 3. (Opcional) Configurando Login SSH sem Senha
+Se você não quiser digitar a senha toda vez que usar o alias, configure a autenticação por chave SSH. Aqui está o passo a passo:
+
+1. **Gere um par de chaves SSH no cliente**:
+   No seu desktop, execute:
+   ```bash
+   ssh-keygen -t rsa
+   ```
+   Pressione `Enter` nas perguntas (use uma passphrase se desejar mais segurança).
+
+2. **Copie a chave pública para o servidor**:
+   Use o comando:
+   ```bash
+   ssh-copy-id shaffer443@192.168.1.100
+   ```
+   Insira a senha do usuário `shaffer443` no servidor quando solicitado.
+
+3. **Teste a conexão**:
+   Agora, conecte ao servidor com:
+   ```bash
+   ssh shaffer443@192.168.1.100
+   ```
+   Se não pedir a senha, a autenticação por chave está configurada.
+
+Com isso, o alias funcionará sem a necessidade de digitar a senha toda vez.
+
+---
+
+### 4. (Opcional) Criar um Atalho no Desktop
+Se você quiser um atalho no **ambiente gráfico** do cliente, pode criar um arquivo `.desktop` para rodar o script.
+
+1. **Crie o arquivo `.desktop`** no diretório `~/Desktop`:
+   ```bash
+   nano ~/Desktop/RodarScript.desktop
+   ```
+
+2. **Adicione o conteúdo abaixo**:
+   ```plaintext
+   [Desktop Entry]
+   Name=Rodar Script Tkinter
+   Exec=gnome-terminal -- bash -c "rodar_script; exec bash"
+   Terminal=true
+   Type=Application
+   ```
+
+3. **Torne o arquivo executável**:
+   ```bash
+   chmod +x ~/Desktop/RodarScript.desktop
+   ```
+
+Agora você pode clicar no atalho na área de trabalho para executar o script!
+
+---
+
+Se precisar de mais ajuda ou algo não funcionar como esperado, me avise!
