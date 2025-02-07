@@ -93,4 +93,75 @@ FLUSH PRIVILEGES;
 
 ---
 
+O erro **"Unknown collation: 'utf8mb4_0900_ai_ci'"** ocorre porque seu MySQL não suporta essa collation. Isso acontece geralmente quando o backup foi feito em uma versão mais nova do MySQL (8.x) e você está tentando importá-lo em uma versão mais antiga (como MySQL 5.7 ou inferior).
+
+---
+
+### **🔧 Solução 1: Editar o Arquivo de Backup Antes da Importação**  
+
+Você pode abrir o arquivo `.sql` e substituir todas as ocorrências de **`utf8mb4_0900_ai_ci`** por uma collation compatível, como **`utf8mb4_general_ci`**.  
+
+Para isso, use o seguinte comando no terminal:  
+
+```sh
+sed -i 's/utf8mb4_0900_ai_ci/utf8mb4_general_ci/g' /home/shaffer443/backups/bancodedados/BDentradas/Dump20250129.sql
+```
+
+Isso irá modificar diretamente o arquivo SQL, tornando-o compatível com sua versão do MySQL.
+
+Agora, tente importar novamente:
+
+```sh
+mysql -u shaffer443 -p entradas < /home/shaffer443/backups/bancodedados/BDentradas/Dump20250129.sql
+```
+
+---
+
+### **🔧 Solução 2: Criar o Banco com Outra Collation Antes da Importação**  
+
+1. Entre no MySQL:  
+
+   ```sh
+   mysql -u shaffer443 -p
+   ```
+
+2. Crie o banco de dados com uma collation suportada:  
+
+   ```sql
+   CREATE DATABASE entradas DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+   ```
+
+3. Saia do MySQL:  
+
+   ```sql
+   EXIT;
+   ```
+
+4. Tente importar novamente:
+
+   ```sh
+   mysql -u shaffer443 -p entradas < /home/shaffer443/backups/bancodedados/BDentradas/Dump20250129.sql
+   ```
+
+---
+
+### **🔧 Solução 3: Atualizar o MySQL**  
+
+Se possível, atualizar seu MySQL para a versão 8.x resolveria o problema. Para verificar sua versão atual:  
+
+```sh
+mysql --version
+```
+
+Se estiver rodando MySQL 5.7 ou anterior, você pode atualizar para o MySQL 8 seguindo este guia:  
+
+```sh
+sudo apt update
+sudo apt upgrade mysql-server
+```
+
+---
+
+Depois de aplicar uma das soluções acima, a importação deve funcionar sem problemas. 🚀
+
 Agora, seu banco está importado e pronto para uso! 🚀
