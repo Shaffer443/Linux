@@ -81,7 +81,34 @@ Agora você pode acessar com:
 ```bash
 mysql -u root -p
 ```
+---
+Para alterar a senha do usuário root no MySQL, siga estes passos:  
 
+### 1️⃣ Acesse o MySQL como root  
+Se você ainda tem acesso ao MySQL com a senha antiga, entre no terminal e execute:  
+
+```sh
+mysql -u root -p
+```
+Digite sua senha atual quando solicitado.  
+
+### 2️⃣ Altere a senha  
+Depois de acessar o MySQL, rode o seguinte comando:  
+
+```sql
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'NovaSenhaForte';
+FLUSH PRIVILEGES;
+```
+Substitua `'NovaSenhaForte'` pela nova senha desejada.  
+
+### 3️⃣ Saia do MySQL  
+```sql
+EXIT;
+```
+
+Agora, ao acessar o MySQL novamente, use a nova senha. 🚀  
+
+Se esqueceu a senha e não consegue logar? Me avise, que te ajudo a resetar! 🔥
 ---
 
 ### **6. (Opcional) Permitir conexões remotas**
