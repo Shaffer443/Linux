@@ -46,4 +46,59 @@ Agora é só usar `mysqldump` para fazer backups, por exemplo:
 mysqldump -u backup_user -p --all-databases > backup.sql
 ```
 
-Se precisar de algo mais refinado, me avisa! 🚀🔥
+---
+
+### ** Script BASH **
+
+```sh
+#!/bin/bash
+
+# Configurações
+USER="backup"
+PASSWORD="SUA_SENHA_AQUI"  # Substitua pela senha correta
+BACKUP_DIR="/home/shaffer443/dumps"
+DATE=$(date +"%Y-%m-%d")
+FILENAME="backup_${DATE}.sql"
+
+# Garantir que o diretório de backup existe
+mkdir -p "$BACKUP_DIR"
+
+# Criar o dump do MySQL
+mysqldump -u "$USER" -p"$PASSWORD" --all-databases > "$BACKUP_DIR/$FILENAME"
+
+# Verificar se o dump foi criado com sucesso
+if [ $? -eq 0 ]; then
+    echo "Backup concluído com sucesso: $BACKUP_DIR/$FILENAME"
+else
+    echo "Erro ao criar backup!"
+    exit 1
+fi
+```
+
+Aqui está um script shell para criar um dump do MySQL e salvar na pasta especificada com a data de hoje no nome do arquivo.
+
+Salve esse script como `backup_mysql.sh`, dê permissão de execução com:
+
+```bash
+chmod +x backup_mysql.sh
+```
+
+E execute com:
+
+```bash
+./backup_mysql.sh
+```
+
+Se quiser agendar isso para rodar automaticamente, pode usar o cron:
+
+```bash
+crontab -e
+```
+
+E adicionar uma linha como esta para rodar todos os dias às 3h da manhã:
+
+```bash
+0 3 * * * /home/shaffer443/backup_mysql.sh
+```
+
+Isso garantirá que seu backup seja feito regularmente! 🚀
