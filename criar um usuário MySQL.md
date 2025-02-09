@@ -89,3 +89,11 @@ Se tudo estiver certo, o `DELETE` deve ser bloqueado.
   ```
 
 Agora, seu usuário para acesso web está pronto e seguro! 🚀
+
+---
+
+### ** Se precisar ver as permissões de todos os usuários, pode rodar: **
+```sql
+SELECT user, host FROM mysql.user;
+```
+E depois verificar cada um com SHOW GRANTS.
