@@ -83,3 +83,93 @@ Isso redirecionará a saída padrão e os erros para o arquivo `log.txt`.
 - Se o script depende de variáveis de ambiente, você pode precisar configurá-las no próprio script ou no `crontab`.
 
 Com isso, você pode agendar tarefas para serem executadas automaticamente no seu sistema Linux usando o `cron`.
+
+----
+# Passo a Passo
+
+Você está no caminho certo! Vamos configurar a tarefa no `cron` para executar o script `backup_mysql.sh` todos os dias às 18:00 (6 da tarde). Aqui está o passo a passo:
+
+---
+
+### 1. Escolha um editor de texto
+No terminal, você viu a mensagem:
+
+```
+Select an editor.  To change later, run 'select-editor'.
+  1. /bin/nano        <---- easiest
+  2. /usr/bin/vim.basic
+  3. /usr/bin/vim.tiny
+  4. /bin/ed
+
+Choose 1-4 [1]:
+```
+
+- Se você prefere um editor simples, escolha **1** (`nano`).
+- Se você está familiarizado com o `vim`, escolha **2** ou **3**.
+
+Digite o número correspondente ao editor que deseja usar e pressione **Enter**.
+
+---
+
+### 2. Adicionar a tarefa ao `cron`
+Depois de escolher o editor, o arquivo `crontab` será aberto. Como é a primeira vez que você está usando o `cron`, ele estará vazio. Adicione a seguinte linha ao arquivo:
+
+```bash
+0 18 * * * /home/shaffer443/Script SHELL Pessoal/backup_mysql.sh
+```
+
+Isso significa:
+- **0 18 * * ***: Executar todos os dias às 18:00.
+- **/home/shaffer443/Script SHELL Pessoal/backup_mysql.sh**: Caminho completo do script que será executado.
+
+---
+
+### 3. Salvar e sair
+- Se estiver usando o `nano`, pressione **Ctrl + O** para salvar e **Ctrl + X** para sair.
+- Se estiver usando o `vim`, pressione **Esc**, digite **:wq** e pressione **Enter** para salvar e sair.
+
+---
+
+### 4. Verificar se a tarefa foi adicionada
+Para confirmar que a tarefa foi adicionada corretamente, execute o comando:
+
+```bash
+crontab -l
+```
+
+Isso listará todas as tarefas agendadas. Você deve ver a linha que você adicionou:
+
+```bash
+0 18 * * * /home/shaffer443/Script SHELL Pessoal/backup_mysql.sh
+```
+
+---
+
+### 5. Dicas adicionais
+#### a) Permissão de execução
+Certifique-se de que o script `backup_mysql.sh` tem permissão de execução. Execute o seguinte comando:
+
+```bash
+chmod +x /home/shaffer443/Script SHELL Pessoal/backup_mysql.sh
+```
+
+#### b) Logs de execução
+Se você quiser registrar a saída do script (por exemplo, para verificar se ele está funcionando corretamente), redirecione a saída para um arquivo de log. Modifique a linha no `crontab` para:
+
+```bash
+0 18 * * * /home/shaffer443/Script SHELL Pessoal/backup_mysql.sh >> /home/shaffer443/backup_log.txt 2>&1
+```
+
+Isso salvará a saída e os erros no arquivo `backup_log.txt`.
+
+#### c) Testar o script
+Antes de confiar no `cron`, teste o script manualmente para garantir que ele funciona como esperado:
+
+```bash
+/home/shaffer443/Script SHELL Pessoal/backup_mysql.sh
+```
+
+---
+
+### 6. Pronto!
+Agora o script será executado automaticamente todos os dias às 18:00. Se precisar de mais ajuda, é só perguntar! 😊
