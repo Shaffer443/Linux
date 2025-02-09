@@ -77,7 +77,7 @@ Para executar o script automaticamente na inicialização, você pode adicionar 
 
 ### Passo 4: Personalizar o Script
 
-- **Montagem do Sistema de Arquivos**: O exemplo acima usa `mount -t nfs` para montar um sistema de arquivos NFS. Se você estiver usando um protocolo diferente (como SMB/CIFS), substitua o comando de montagem pelo apropriado.
+- **Montagem do Sistema de Arquivos**: O exemplo acima usa `mount -t nfs` para montar um sistema de arquivos NFS. ** Se você estiver usando um protocolo diferente (como SMB/CIFS), substitua o comando de montagem pelo apropriado. **
   
 - **Intervalo de Verificação**: O intervalo de verificação está definido para 60 segundos. Você pode ajustar esse valor conforme necessário.
 
