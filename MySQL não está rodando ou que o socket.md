@@ -76,5 +76,21 @@ sudo systemctl start mysql
 ```
 
 ---
+# Resolvido assim 09/02/2025
 
-Se nada disso funcionar, me diga qual sistema operacional e versão do MySQL você está usando para que possamos refinar a solução! 🚀
+🔎 3️⃣ Verifique se o arquivo de socket existe
+
+Se o erro persistir, pode ser que o arquivo de socket /tmp/mysql.sock não tenha sido criado. Para verificar, rode:
+```bash
+ls -l /tmp/mysql.sock
+```
+Se o arquivo não existir, tente recriá-lo reiniciando o MySQL:
+```bash
+sudo systemctl restart mysql
+```
+Se ainda não funcionar, tente criar um link simbólico para o socket:
+```bash
+sudo ln -s /var/run/mysqld/mysqld.sock /tmp/mysql.sock
+```
+Depois, tente se conectar novamente.
+
