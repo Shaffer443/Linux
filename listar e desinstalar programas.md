@@ -63,4 +63,29 @@ whereis nome-do-programa
 ```
 Isso mostra onde o executável está localizado, o que pode ajudar a identificar o gerenciador de pacotes usado.
 
-Se precisar de ajuda para um programa específico, manda aí! 🚀
+----
+
+Esse aviso:  
+
+```
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+```  
+
+significa que a interface de linha de comando (`CLI`) do `apt` pode mudar entre versões do Ubuntu, e, por isso, não é garantido que os comandos usados hoje funcionarão exatamente da mesma forma no futuro.  
+
+### 🔹 O que fazer?  
+Se você estiver apenas rodando comandos manualmente no terminal, **pode ignorar esse aviso** sem problemas. Ele não impede que os comandos funcionem.  
+
+### 🔹 Se for usar em scripts?  
+Se você estiver criando scripts para automação, o ideal é usar o `dpkg` ou `apt-cache`, que são mais estáveis:  
+
+✅ Para listar pacotes instalados de forma estável:  
+```bash
+dpkg --list | grep discord
+```
+ou  
+```bash
+apt-cache policy discord
+```
+
+Mas se for só um uso casual, manda ver com `apt list --installed` sem preocupação. 😉
