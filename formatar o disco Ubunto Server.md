@@ -79,4 +79,73 @@ Para um disco de **500GB** em um servidor geral (usando **ext4** + swap):
 - **Swap:** Use partição dedicada se a RAM for ≤4GB; caso contrário, arquivo swap.  
 - **Layout:** Separe `/`, `/home`, e `swap` se for um servidor multifuncional.  
 
-Se tiver um caso de uso específico (ex.: banco de dados, virtualização), posso ajustar a recomendação!
+Se tiver um caso de uso específico (ex.: banco de dados, virtualização)
+
+# -----------------------
+
+A escolha do **ponto de montagem** depende da finalidade do seu servidor. Vou explicar cada opção e dar uma recomendação baseada em um **uso geral para Ubuntu Server** (se for um caso específico, como banco de dados ou web hosting, posso ajustar).
+
+---
+
+### **Pontos de Montagem Principais e Recomendações**  
+| Ponto de Montagem | O que Armazena? | Recomendação para Servidor Geral |
+|-------------------|----------------|----------------------------------|
+| **`/`** (root) | Sistema básico, binários essenciais. | **SEMPRE necessário** (partição obrigatória). Reserve **20GB–50GB** (depende do número de pacotes). |
+| **`/boot`** | Kernel e arquivos de inicialização. | **Recomendado** (1GB, formato `ext4`). Útil para evitar problemas com atualizações do kernel. |
+| **`/home`** | Arquivos de usuários (documentos, scripts, etc.). | **Opcional** (mas útil se quiser isolar dados do sistema). Reserve o espaço restante se for relevante. |
+| **`/var`** | Arquivos variáveis (logs, caches, bancos de dados). | **Recomendado se rodar serviços (web, DB)**. Pode crescer muito (ex.: 10GB–50GB). |
+| **`/srv`** | Dados de serviços (ex.: sites, FTP). | **Opcional** (só necessário se for hospedar serviços específicos). |
+| **`/tmp`** | Arquivos temporários. | Normalmente em `tmpfs` (memória RAM), mas pode ter partição dedicada (2GB–5GB). |
+| **`swap`** | Memória virtual. | **Necessária** (partição ou arquivo swap, como discutido antes). |
+
+---
+
+### **Esquema de Partições Recomendado (Uso Geral)**  
+Para um **servidor simples** (ex.: web, arquivos, pequeno banco de dados) com disco de **500GB** e `ext4`:  
+
+| Partição   | Tamanho  | Ponto de Montagem | Notas                  |
+|------------|---------|-------------------|------------------------|
+| `/boot`    | 1GB     | `/boot`           | Formato `ext4`.        |
+| `swap`     | 4GB–8GB | (swap)            | Tamanho depende da RAM. |
+| `/` (root) | 50GB    | `/`               | Sistema principal.     |
+| `/home`    | 100GB   | `/home`           | Dados de usuários.     |
+| `/var`     | 50GB    | `/var`            | Logs e serviços.       |
+| *(restante)* | ~300GB | `/srv` ou outro   | Dados adicionais.      |
+
+---
+
+### **Quando Usar Outros Pontos de Montagem?**  
+- **`/usr`**: Normalmente incluso em `/`. Só vale a pena separar se for um servidor de pacotes/software.  
+- **`/var/lib`**: Útil se rodar **containers (Docker)** ou **bancos de dados** (ex.: PostgreSQL). Pode alocar espaço extra aqui.  
+- **`/opt`**: Para software de terceiros (ex.: aplicativos proprietários).  
+- **`/mnt`**: Temporário (ex.: montar discos externos). Não precisa de partição dedicada.  
+
+---
+
+### **Exemplo Prático (fdisk)**
+1. Liste os discos:
+   ```bash
+   sudo fdisk -l
+   ```
+2. Edite o disco (ex.: `/dev/sda`):
+   ```bash
+   sudo fdisk /dev/sda
+   ```
+   - Use `n` para criar partições (ex.: `/boot`, `swap`, `/`, `/home`, `/var`).  
+   - Defina os tipos (`t`): `82` para swap, `83` para ext4.  
+3. Formate e monte:
+   ```bash
+   sudo mkfs.ext4 /dev/sda1  # /boot
+   sudo mkswap /dev/sda2     # swap
+   sudo mkfs.ext4 /dev/sda3  # /
+   sudo mkfs.ext4 /dev/sda4  # /home
+   ```
+
+---
+
+### **Resumo Final**  
+- **Obrigatórios**: `/` (root) + `swap`.  
+- **Recomendados**: `/boot` (segurança) + `/var` (serviços) + `/home` (dados).  
+- **Opcionais**: `/srv`, `/opt` (depende do uso).  
+
+Se o servidor for para algo específico (ex.: **NFS**, **Docker**, **MySQL**), posso sugerir um esquema otimizado!
