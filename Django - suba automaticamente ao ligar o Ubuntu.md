@@ -100,6 +100,39 @@ sudo systemctl status django_crud.service
 
 ---
 
+Boa dúvida, Rafael!
+
+Na linha:
+
+```ini
+ExecStart=/home/gti/django/CRUD_Impressoras/meu_projeto/venv/bin/python manage.py runserver 0.0.0.0:8000
+```
+
+✅ **O correto é manter `0.0.0.0:8000`**, **mesmo que seu IP seja `10.4.0.6`**.
+
+---
+
+### 🔎 Por quê?
+
+* `0.0.0.0` significa: "escute em todas as interfaces de rede disponíveis".
+* Assim, se o IP do servidor mudar (ex: DHCP), o Django continuará acessível.
+* Usar `10.4.0.6` forçaria o bind apenas nesse IP específico — o que pode causar erro se a rede mudar ou o IP for alterado.
+
+---
+
+### ✅ Resumo:
+
+Use:
+
+```ini
+ExecStart=/home/gti/django/CRUD_Impressoras/meu_projeto/venv/bin/python manage.py runserver 0.0.0.0:8000
+```
+
+Isso garante que o Django escute em todas as interfaces — inclusive no `10.4.0.6`.
+
+Se quiser, posso revisar o conteúdo completo do seu `.service`. Deseja que eu monte ele pra você com base no que já conversamos?
+
+
 Se der erro ou não subir, me avise que revisamos os caminhos e permissões.
 
 Quer que eu revise os caminhos com você?
