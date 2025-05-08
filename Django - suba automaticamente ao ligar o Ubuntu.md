@@ -1,3 +1,30 @@
+Ótima pergunta!
+
+✅ **Você deve criar o arquivo `/etc/systemd/system/django_crud.service` fora da (venv)** — ou seja, **não precisa estar com o ambiente virtual ativado**.
+
+---
+
+O `systemd` roda como root, então o serviço vai chamar o Python da sua `venv` de forma automática, porque o caminho completo do executável da venv é informado no arquivo (`ExecStart`).
+
+---
+
+### ✅ Pode fazer assim:
+
+Mesmo que você esteja dentro da venv, basta rodar:
+
+```bash
+deactivate  # opcional, apenas para sair da venv
+sudo nano /etc/systemd/system/django_crud.service
+```
+
+E então cole o conteúdo com os **caminhos absolutos corretos** para o seu projeto e o executável Python da venv.
+
+---
+
+Se quiser, posso te ajudar a montar o conteúdo exato do serviço agora, baseado na estrutura que você já mostrou. Deseja isso?
+
+---
+
 Exatamente, Rafael! Como seu IP é `10.4.0.6`, você pode acessar o Django via:
 
 ```
