@@ -97,6 +97,51 @@ Você pode verificar se está funcionando com:
 ```bash
 sudo systemctl status django_crud.service
 ```
+---
+
+Sim, Rafael, **pode sim!** ✅
+
+Você pode dar ao serviço qualquer nome que desejar, desde que termine com `.service`. O nome:
+
+```bash
+django_crud_impressora.service
+```
+
+está perfeito — até melhor por ser mais descritivo.
+
+---
+
+### Só não esqueça de seguir depois os passos obrigatórios:
+
+1. **Recarregar os serviços do systemd:**
+
+```bash
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+```
+
+2. **Ativar para iniciar no boot:**
+
+```bash
+sudo systemctl enable django_crud_impressora.service
+```
+
+3. **Iniciar agora manualmente (a primeira vez):**
+
+```bash
+sudo systemctl start django_crud_impressora.service
+```
+
+4. **Verificar o status:**
+
+```bash
+sudo systemctl status django_crud_impressora.service
+```
+
+---
+
+Se quiser, me mostra os caminhos reais do seu projeto e da venv e eu te mando o conteúdo certinho do `.service` para evitar erro. Deseja isso?
+
 
 ---
 
