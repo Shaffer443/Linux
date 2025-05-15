@@ -1,5 +1,17 @@
 Se o seu Ubuntu 22.04 não está reconhecendo o HD externo, aqui estão algumas etapas que você pode seguir para diagnosticar e resolver o problema:
 
+### Abra o terminal e execute o comando:
+     ```
+     df -h
+     ```
+    Veririque se a unidade (Pen driver, HD externo) é apontada na lista. Se sim, basta entrar no endereço montado pelo sistema.
+    Exemplo:
+    ```
+    /media/shaffer443/Shaffer HD Externo
+    ```
+
+---
+
 ### 1. **Verifique as Conexões Físicas:**
    - Certifique-se de que o cabo USB está firmemente conectado tanto no HD externo quanto no computador.
    - Tente usar outra porta USB ou outro cabo, se disponível.
