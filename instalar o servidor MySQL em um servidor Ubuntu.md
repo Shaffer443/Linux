@@ -426,7 +426,83 @@ GRANT SELECT ON investimentos.* TO 'webfinancas'@'%';
    SHOW PROCESSLIST;
    ```
 
-Se precisar de ajuda para configurar o firewall ou SSL, é só avisar! 😊
+---
+
+Se a sua aplicação web (**PHP, Node.js, Python, etc.**) estiver rodando **no mesmo servidor** onde o MySQL está instalado, o uso de **`'webfinancas'@'localhost'`** é a configuração mais segura e recomendada.  
+
+---
+
+### **Por que `@'localhost'` funciona nesse caso?**
+- Quando a aplicação web e o MySQL estão na mesma máquina, a conexão ocorre via **socket local** (ou `127.0.0.1`), sem passar pela rede externa.  
+- Isso é mais rápido e seguro, pois evita expor o MySQL à internet.  
+
+---
+
+### **Configuração correta (para aplicação local)**
+1. **Crie o usuário com acesso `@'localhost'` (se ainda não existir):**
+   ```sql
+   CREATE USER 'webfinancas'@'localhost' IDENTIFIED BY 'SenhaSegura123!';
+   GRANT SELECT ON investimentos.* TO 'webfinancas'@'localhost';
+   FLUSH PRIVILEGES;
+   ```
+
+2. **Na configuração da sua aplicação web**, use os seguintes parâmetros de conexão:  
+   - **Host:** `localhost` ou `127.0.0.1`  
+   - **Usuário:** `webfinancas`  
+   - **Senha:** `SenhaSegura123!`  
+   - **Database:** `investimentos`  
+
+   **Exemplo em PHP (PDO):**
+   ```php
+   $pdo = new PDO('mysql:host=localhost;dbname=investimentos', 'webfinancas', 'SenhaSegura123!');
+   ```
+
+---
+
+### **Vantagens dessa abordagem:**
+✅ **Mais seguro** (o MySQL não aceita conexões externas).  
+✅ **Mais rápido** (dados trafegam internamente no servidor).  
+✅ **Não precisa alterar `bind-address` no MySQL** (já funciona por padrão).  
+
+---
+
+### **Problemas comuns e soluções:**
+#### ❌ **Erro: "Access denied for user 'webfinancas'@'localhost'"**
+- Verifique se a senha está correta.  
+- Confira se o banco `investimentos` existe.  
+- Execute novamente o `GRANT`:  
+  ```sql
+  GRANT SELECT ON investimentos.* TO 'webfinancas'@'localhost';
+  FLUSH PRIVILEGES;
+  ```
+
+#### ❌ **Aplicação não consegue conectar (mesmo no mesmo servidor)**
+- Verifique se o MySQL está rodando:  
+  ```bash
+  sudo systemctl status mysql
+  ```
+- Teste a conexão manualmente via terminal:  
+  ```bash
+  mysql -u webfinancas -p -h localhost investimentos
+  ```
+
+---
+
+### **Dica extra: Restringir ainda mais o acesso**
+Se quiser aumentar a segurança, você pode limitar o usuário **apenas a consultas `SELECT` em tabelas específicas** (em vez de todo o banco `investimentos`):  
+```sql
+GRANT SELECT ON investimentos.tabela1 TO 'webfinancas'@'localhost';
+GRANT SELECT ON investimentos.tabela2 TO 'webfinancas'@'localhost';
+```
+
+---
+
+### **Resumo final:**
+- **Se a aplicação e o MySQL estão no mesmo servidor**, use `@'localhost'`.  
+- **NÃO altere o `bind-address`** para `0.0.0.0` (não é necessário e reduz a segurança).  
+- **Sempre use senhas fortes** e evite permissões desnecessárias.  
+
+Se surgirem outros problemas, me avise! 😊
 
 ---
 
