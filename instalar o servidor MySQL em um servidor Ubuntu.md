@@ -1,4 +1,47 @@
 Aqui está um guia passo a passo para instalar o servidor MySQL em um servidor Ubuntu 18.04:
+Para verificar se o MySQL está instalado no seu servidor Ubuntu, você pode usar os seguintes comandos:
+
+### 1. Verificar se o MySQL está instalado
+```bash
+mysql --version
+```
+ou
+```bash
+mysqld --version
+```
+
+Se o MySQL estiver instalado, esses comandos retornarão a versão instalada. Se não estiver instalado, você verá uma mensagem como "comando não encontrado".
+
+### 2. Verificar o status do serviço MySQL (se instalado)
+```bash
+sudo systemctl status mysql
+```
+
+Se o MySQL estiver instalado e em execução, você verá informações sobre o serviço com status "active (running)".
+
+### 3. Verificar pacotes instalados relacionados ao MySQL
+```bash
+dpkg -l | grep mysql
+```
+ou
+```bash
+apt list --installed | grep mysql
+```
+
+Estes comandos listarão todos os pacotes relacionados ao MySQL que estão instalados no sistema.
+
+### 4. Verificar se o servidor MySQL está ouvindo conexões
+```bash
+sudo netstat -tulnp | grep mysql
+```
+
+Se o MySQL estiver em execução, você verá uma linha mostrando que o serviço está ouvindo em uma porta (normalmente 3306).
+
+Se nenhum desses comandos mostrar resultados, provavelmente o MySQL não está instalado no seu servidor Ubuntu. Nesse caso, você pode instalá-lo com:
+```bash
+sudo apt update
+sudo apt install mysql-server
+```
 
 ---
 
