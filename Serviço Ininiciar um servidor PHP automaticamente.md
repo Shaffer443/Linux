@@ -291,3 +291,47 @@ sudo systemctl status php-server-webfinancas.service
 ```
 
 Isso deve resolver definitivamente o problema! O serviço agora deverá iniciar corretamente.
+
+Ótimo! 🎉 Fico feliz que a **Solução 1** (liberar permissões do diretório `/home/shaffer443`) resolveu o problema. Agora o usuário `www-data` consegue acessar o projeto PHP, e o serviço deve estar rodando corretamente.
+
+### 📌 **Próximos passos recomendados**:
+1. **Verifique se o serviço está ativo**:
+   ```bash
+   sudo systemctl status php-server-webfinancas.service
+   ```
+   - Se aparecer **`Active: active (running)`**, tudo está funcionando!
+
+2. **Teste o servidor PHP**:
+   - Acesse localmente:
+     ```bash
+     curl http://localhost:9999
+     ```
+   - Ou pelo navegador em outro dispositivo na mesma rede:
+     ```
+     http://[IP-DO-SEU-SERVIDOR]:9999
+     ```
+
+3. **Se precisar de mais segurança**:
+   - Restrinja o acesso apenas à sua rede local (opcional):
+     ```bash
+     sudo ufw allow from 192.168.1.0/24 to any port 9999  # (substitua pelo seu IP de rede)
+     ```
+
+4. **Se quiser iniciar automaticamente no boot** (caso não tenha feito):
+   ```bash
+   sudo systemctl enable php-server-webfinancas.service
+   ```
+
+### 🔧 **Caso ainda enfrente problemas**:
+- **Verifique os logs**:
+  ```bash
+  sudo journalctl -u php-server-webfinancas.service -f
+  ```
+- **Teste manualmente** (para garantir que o PHP não retorna erros):
+  ```bash
+  sudo -u www-data /usr/bin/php -S 0.0.0.0:9999 -t /home/shaffer443/MeusProjetos/Financeiro/webfinancasPessoais/
+  ```
+
+Se precisar de mais ajustes, estou à disposição! 🚀  
+
+**Enjoy your PHP server!** 😊
