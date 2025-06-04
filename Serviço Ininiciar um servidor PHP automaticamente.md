@@ -241,3 +241,53 @@ sudo journalctl -u php-server-webfinancas.service -b --no-pager
 2. **Verifique se há um `index.php` ou `index.html` no diretório** (o PHP pode estar recusando iniciar sem um arquivo padrão).
 
 Se tudo estiver correto, o serviço deve iniciar e ficar **`Active: active (running)`**. 🚀
+
+---
+
+Ah, agora o problema ficou claro! O sistema diz que o diretório não existe, mas você confirmou que ele está lá. Isso acontece porque:
+
+### 🕵️‍♂️ Causa do problema:
+O usuário `www-data` **não tem permissão para navegar** até o diretório `/home/shaffer443/`. Por padrão, diretórios home são restritos ao seu usuário.
+
+### ✅ Solução definitiva:
+Temos 3 opções:
+
+#### 1️⃣ **Mudar as permissões do diretório home (recomendado)**
+```bash
+# Permite que www-data acesse o diretório
+sudo chmod 755 /home/shaffer443
+sudo chmod -R 755 /home/shaffer443/MeusProjetos
+```
+
+#### 2️⃣ **Mover o projeto para um local acessível**
+```bash
+sudo mv /home/shaffer443/MeusProjetos/Financeiro /var/www/
+sudo chown -R www-data:www-data /var/www/Financeiro
+```
+E atualize o serviço para:
+```ini
+WorkingDirectory=/var/www/Financeiro/webfinancasPessoais
+ExecStart=/usr/bin/php -S 0.0.0.0:9999 -t /var/www/Financeiro/webfinancasPessoais
+```
+
+#### 3️⃣ **Mudar o usuário do serviço (alternativa)**
+Edite o serviço trocando:
+```ini
+User=www-data  →  User=shaffer443
+Group=www-data →  Group=shaffer443
+```
+
+### 🔍 Como testar:
+```bash
+# Teste como www-data
+sudo -u www-data ls /home/shaffer443/MeusProjetos/Financeiro/webfinancasPessoais
+```
+
+### 💡 Dica importante:
+Se optar pela solução 1, após mudar as permissões:
+```bash
+sudo systemctl restart php-server-webfinancas.service
+sudo systemctl status php-server-webfinancas.service
+```
+
+Isso deve resolver definitivamente o problema! O serviço agora deverá iniciar corretamente.
