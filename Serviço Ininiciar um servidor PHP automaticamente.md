@@ -160,3 +160,84 @@ journalctl -u contatoseap.service
 ```
 
 Isso pode fornecer informações adicionais sobre o que está causando a falha no serviço.
+
+
+---
+
+Agora o serviço está tentando iniciar, mas ainda está falhando com um **status=200/CHDIR**, o que indica que há um problema ao acessar o diretório especificado (`WorkingDirectory`). Vamos resolver isso:
+
+---
+
+### **Problema Identificado**:
+O erro **`status=200/CHDIR`** significa que:
+1. O systemd não consegue acessar o diretório (`WorkingDirectory`), ou
+2. O usuário `www-data` não tem permissão para ler/executar o PHP nesse diretório.
+
+---
+
+### **Solução Passo a Passo**:
+
+#### 1. **Verifique se o diretório existe e tem permissões corretas**:
+```bash
+# Verifique se o diretório existe
+ls -la /home/shaffer443/MeusProjetos/Financeiro/webfinancasPessoais/
+
+# Dê permissão ao www-data (usuário do serviço)
+sudo chown -R www-data:www-data /home/shaffer443/MeusProjetos/Financeiro/webfinancasPessoais/
+sudo chmod -R 755 /home/shaffer443/MeusProjetos/Financeiro/webfinancasPessoais/
+```
+
+#### 2. **Teste manualmente (como www-data)**:
+```bash
+sudo -u www-data /usr/bin/php -S 0.0.0.0:9999 -t /home/shaffer443/MeusProjetos/Financeiro/webfinancasPessoais/
+```
+- Se funcionar, pressione **Ctrl+C** e reinicie o serviço.
+- Se **não funcionar**, aparecerá um erro específico (ex: permissão negada, PHP não encontrado).
+
+#### 3. **Se o PHP não estiver no caminho padrão**:
+```bash
+# Verifique onde está o PHP
+which php
+```
+- Se retornar algo como `/usr/local/bin/php`, atualize o `ExecStart` no serviço:
+  ```ini
+  ExecStart=/usr/local/bin/php -S 0.0.0.0:9999 -t /home/shaffer443/MeusProjetos/...
+  ```
+
+#### 4. **Verifique se a porta 9999 está livre**:
+```bash
+sudo lsof -i :9999  # Se estiver em uso, mate o processo ou mude a porta
+```
+
+#### 5. **Ative logs detalhados (opcional)**:
+Adicione ao arquivo de serviço (`[Service]`):
+```ini
+StandardOutput=journal
+StandardError=journal
+```
+Depois recarregue e reinicie:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart php-server-webfinancas.service
+```
+
+#### 6. **Verifique os logs novamente**:
+```bash
+sudo journalctl -u php-server-webfinancas.service -b --no-pager
+```
+
+---
+
+### **Possíveis Causas do Erro**:
+- **Diretório não existe** → Verifique o caminho em `WorkingDirectory`.
+- **www-data não tem permissão** → Corrija com `chown`/`chmod`.
+- **PHP não encontrado** → Atualize o caminho em `ExecStart`.
+- **Porta bloqueada** → Use outra porta (ex: `8080`).
+
+---
+
+### **Se ainda não funcionar**:
+1. **Compartilhe a saída do teste manual (`sudo -u www-data php -S ...`)**.
+2. **Verifique se há um `index.php` ou `index.html` no diretório** (o PHP pode estar recusando iniciar sem um arquivo padrão).
+
+Se tudo estiver correto, o serviço deve iniciar e ficar **`Active: active (running)`**. 🚀
