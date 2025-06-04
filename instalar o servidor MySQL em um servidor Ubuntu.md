@@ -125,6 +125,60 @@ Agora você pode acessar com:
 mysql -u root -p
 ```
 ---
+Não, esse script **não permite acesso root via SSH** - ele apenas altera a senha do usuário **root do MySQL**, não do sistema operacional (Ubuntu).  
+
+### O que esse script faz:
+1. **`ALTER USER 'root'@'localhost'...`**  
+   - Muda a autenticação do **usuário root do MySQL** para `mysql_native_password` (método tradicional).  
+   - Define uma nova senha (`@Rafa3241klu1424`) para o **root do MySQL**.  
+
+2. **`FLUSH PRIVILEGES;`**  
+   - Recarrega as permissões do MySQL para aplicar as alterações.  
+
+---
+
+### Se você quer **permitir login SSH como root** no Ubuntu, siga estes passos:
+
+#### 1. Verifique se o **root tem senha definida** (senha do sistema, não do MySQL):
+```bash
+sudo passwd root
+```
+- Isso define uma senha para o usuário root do **sistema operacional**.  
+
+#### 2. Edite o arquivo de configuração do SSH para permitir login como root:
+```bash
+sudo nano /etc/ssh/sshd_config
+```
+- Procure a linha:  
+  ```bash
+  #PermitRootLogin prohibit-password
+  ```
+- Altere para:  
+  ```bash
+  PermitRootLogin yes
+  ```
+- Salve (`Ctrl+O`, `Enter`, `Ctrl+X`) e reinicie o SSH:  
+  ```bash
+  sudo systemctl restart sshd
+  ```
+
+#### 3. Agora você pode acessar via SSH como root:
+```bash
+ssh root@IP_DO_SERVIDOR
+```
+
+---
+
+### ⚠️ **Atenção!**  
+- Permitir login SSH como **root** é **inseguro** e não recomendado.  
+- Prefira usar um usuário comum e `sudo` para tarefas administrativas.  
+- Se realmente necessário, proteja o acesso com:  
+  - **Senhas fortes** (como a que você já está usando).  
+  - **Chaves SSH** (em vez de senha).  
+  - **Firewall (UFW)** para restringir IPs permitidos.  
+
+Quer uma alternativa mais segura? Posso te ajudar a configurar! 😊
+---
 Para alterar a senha do usuário root no MySQL, siga estes passos:  
 
 ### 1️⃣ Acesse o MySQL como root  
