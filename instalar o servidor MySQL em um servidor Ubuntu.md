@@ -349,4 +349,85 @@ FLUSH PRIVILEGES;
 
 ---
 
+Ótima pergunta! O uso de **`'webfinancas'@'localhost'`** pode causar problemas se sua aplicação web não estiver rodando no **mesmo servidor** do MySQL. Vamos esclarecer e corrigir isso:
+
+---
+
+### 🔍 **Entendendo o problema:**
+- **`@'localhost'`** significa que o usuário só pode se conectar **diretamente do servidor onde o MySQL está instalado** (via socket ou IP local).  
+- Se sua aplicação web estiver em outro servidor (ou mesmo em um container diferente), a conexão **será bloqueada**.
+
+---
+
+### ✅ **Solução correta (depende do cenário):**
+
+#### **Caso 1: Aplicação web no MESMO servidor que o MySQL**  
+(Ex.: Apache/Nginx e MySQL na mesma máquina)  
+- O usuário `'webfinancas'@'localhost'` já funciona.  
+- Mas para maior compatibilidade, você pode usar:  
+  ```sql
+  CREATE USER 'webfinancas'@'127.0.0.1' IDENTIFIED BY 'SenhaSegura123!';
+  GRANT SELECT ON investimentos.* TO 'webfinancas'@'127.0.0.1';
+  ```
+  (Assim, a aplicação pode conectar via `127.0.0.1:3306`.)
+
+---
+
+#### **Caso 2: Aplicação web em OUTRO servidor**  
+(Ex.: Site hospedado em um servidor diferente do banco de dados)  
+1. **Crie o usuário com acesso a partir do IP da aplicação web:**  
+   ```sql
+   CREATE USER 'webfinancas'@'IP_DO_SERVIDOR_WEB' IDENTIFIED BY 'SenhaSegura123!';
+   GRANT SELECT ON investimentos.* TO 'webfinancas'@'IP_DO_SERVIDOR_WEB';
+   ```
+   - Substitua `IP_DO_SERVIDOR_WEB` pelo IP público ou privado do servidor web.  
+
+2. **Libere o MySQL para conexões externas (se necessário):**  
+   Edite o arquivo de configuração do MySQL:  
+   ```bash
+   sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
+   ```
+   Altere a linha:  
+   ```ini
+   bind-address = 127.0.0.1
+   ```
+   Para:  
+   ```ini
+   bind-address = 0.0.0.0
+   ```
+   ⚠️ **Isso expõe o MySQL para a rede!** Proteja-o com:  
+   - Firewall (permita apenas o IP do servidor web).  
+   - Senhas fortes.  
+
+3. **Reinicie o MySQL:**  
+   ```bash
+   sudo systemctl restart mysql
+   ```
+
+---
+
+#### **Caso 3: Aplicação em qualquer lugar (NÃO RECOMENDADO)**  
+Se precisar de acesso de qualquer IP (útil para testes, mas **inseguro**):  
+```sql
+CREATE USER 'webfinancas'@'%' IDENTIFIED BY 'SenhaSegura123!';
+GRANT SELECT ON investimentos.* TO 'webfinancas'@'%';
+```
+🔒 **Riscos:**  
+- O banco ficará exposto a ataques.  
+- Sempre restrinja por firewall (ex.: `sudo ufw allow from IP_DO_SERVIDOR_WEB to any port 3306`).  
+
+---
+
+### 📌 **Recomendações finais:**
+1. **Prefira `@'IP_DO_SERVIDOR'`** em vez de `@'%'` para maior segurança.  
+2. **Use SSL** para conexões remotas (evita interceptação de dados).  
+3. **Monitore conexões** com:  
+   ```sql
+   SHOW PROCESSLIST;
+   ```
+
+Se precisar de ajuda para configurar o firewall ou SSL, é só avisar! 😊
+
+---
+
 Agora, seu banco está importado e pronto para uso! 🚀
