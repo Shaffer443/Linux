@@ -475,4 +475,257 @@ O processo para mudar para um grupo depois é muito simples e se resume a apenas
 
 Nenhuma outra alteração é necessária no seu bot ou na lógica do script. Você pode fazer essa transição em menos de cinco minutos quando for o momento certo.
 
-Fico à disposição quando você decidir fazer a mudança ou se precisar de ajuda com qualquer outra coisa no servidor!
+------------------------------------------------------------------------------------------------------------------------
+Se o seu script em `/etc/init.d` funciona quando você o chama manualmente, mas não está executando automaticamente na reinicialização, os problemas mais comuns (especialmente em distribuições modernas como o Ubuntu/Debian) são:
+
+### 1\. O Script Não Está Habilitado para Inicialização
+
+Colocar o script em `/etc/init.d` não é suficiente para que ele seja executado automaticamente. Você precisa registrar o script com o sistema de inicialização (SysVinit ou, mais provavelmente, **Systemd** no seu servidor moderno) para que os links simbólicos corretos sejam criados nos diretórios de *runlevel* (`/etc/rcX.d/`).
+
+**Se o seu sistema usa SysVinit (sistemas mais antigos/legados) ou tem compatibilidade:**
+
+Você precisa usar o comando apropriado (no Debian/Ubuntu):
+
+```bash
+sudo update-rc.d boot-notifier-telegram defaults
+```
+
+Este comando cria os links simbólicos necessários para iniciar o script nos *runlevels* padrão (o equivalente a `SXXboot-notifier-telegram` em `/etc/rcS.d/`, `/etc/rc2.d/`, etc., onde `XX` é um número de ordem).
+
+**Se o seu sistema usa Systemd (a maioria dos sistemas modernos):**
+
+Embora o Systemd geralmente consiga gerar uma unidade de serviço a partir de um script SysVinit, o método mais robusto e recomendado é criar um **arquivo de unidade Systemd** dedicado, já que o uso de `/etc/init.d` está se tornando obsoleto.
+
+### 2\. Problemas de Ordem de Inicialização e Variáveis de Ambiente
+
+O script pode estar sendo executado, mas falhando porque:
+
+  * **A rede ainda não está configurada:** O comando `curl` e, possivelmente, a obtenção do IP com `hostname -I` e a data com `date` (embora menos provável de falhar), precisam da rede funcionando. Se o seu script for executado **muito cedo** no processo de boot, ele pode não conseguir se conectar à API do Telegram.
+  * **Variáveis de Ambiente Mínimas:** Scripts de inicialização (`init.d` ou `Systemd`) são executados em um ambiente com variáveis de ambiente mínimas, o que é diferente do seu terminal.
+
+#### Sugestões para o Script:
+
+1.  **Garantir a Rede:** Verifique se o seu sistema utiliza o formato LSB (Linux Standard Base) para scripts init.d. Se sim, você pode adicionar um bloco no cabeçalho do seu script para garantir que ele espere pela rede:
+
+    ```bash
+    #!/bin/bash
+    ### BEGIN INIT INFO
+    # Provides:          boot-notifier-telegram
+    # Required-Start:    $local_fs $remote_fs $network $syslog
+    # Required-Stop:     $local_fs $remote_fs $network $syslog
+    # Default-Start:     2 3 4 5
+    # Default-Stop:      0 1 6
+    # Short-Description: Notifica boot via Telegram
+    # Description:       Envia uma mensagem ao Telegram após a reinicialização.
+    ### END INIT INFO
+
+    # ... o resto do seu script ...
+    ```
+
+    Após adicionar isso, execute novamente o `update-rc.d` (se for o caso):
+
+    ```bash
+    sudo update-rc.d boot-notifier-telegram defaults
+    ```
+
+2.  **Debugging (Testar se o script está sendo executado):**
+
+    Para confirmar se o script está sendo executado no boot (e se está falhando ou não), adicione um log no início e no final:
+
+    ```bash
+    #!/bin/bash
+    LOG_FILE="/var/log/boot-notifier-telegram.log"
+    echo "$(date): Script iniciado." >> $LOG_FILE
+
+    # ... o resto do seu script ...
+
+    # --- Enviar a Mensagem ---
+    CURL_OUTPUT=$(curl -s -X POST $TELEGRAM_API \
+          -d chat_id="$CHAT_ID" \
+          -d text="$MENSAGEM" \
+          -d parse_mode="Markdown")
+          
+    echo "$(date): Mensagem enviada. Resposta do CURL: $CURL_OUTPUT" >> $LOG_FILE
+
+    # Fim do script
+    ```
+
+    Reinicie e verifique o conteúdo de `/var/log/boot-notifier-telegram.log`.
+
+      * **Se o arquivo não existir:** O script não está sendo executado. O problema é a habilitação (Ponto 1).
+      * **Se o arquivo existir, mas estiver com erro de rede:** O script está sendo executado muito cedo. O problema é a ordem (`Required-Start` do LSB ou Systemd).
+      * **Se o arquivo tiver a resposta do Telegram:** O script funcionou\! Verifique o Chat ID e o Token novamente, pois o problema pode estar neles.
+
+-----
+
+### **Recomendação Moderna (Systemd)**
+
+Se o seu servidor usa **Systemd** (o que é muito provável), crie um arquivo de unidade de serviço para uma solução mais robusta:
+
+1.  Mova seu script para um local mais apropriado, por exemplo: `/usr/local/bin/boot-notifier-telegram.sh`
+2.  Dê permissão de execução: `sudo chmod +x /usr/local/bin/boot-notifier-telegram.sh`
+3.  Crie o arquivo de unidade Systemd: `sudo nano /etc/systemd/system/telegram-boot-notify.service`
+
+**Conteúdo do arquivo `.service`:**
+
+```ini
+[Unit]
+Description=Telegram Boot Notification
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/boot-notifier-telegram.sh
+
+[Install]
+WantedBy=multi-user.target
+```
+
+4.  Habilite e Inicie o Serviço (o Systemd irá executá-lo no próximo boot):
+
+    ```bash
+    sudo systemctl daemon-reload
+    sudo systemctl enable telegram-boot-notify.service
+    ```
+
+Este método é mais adequado para sistemas modernos e garante que o script só será executado **depois** que o serviço de rede estiver ativo (`After=network.target`).
+
+###----------------------------------------------------------------------------------------------------------------------
+
+# Verifica se a rede esta operacional antes de enviar a mensagem no telegram
+
+Sua observação está correta\! Ao usar o sistema **Systemd** (o padrão na maioria dos servidores Linux atuais) com a configuração `After=network.target`, você garante que o script só tentará enviar a notificação **depois que a rede estiver operacional**, resolvendo o problema comum de falha na conectividade no início do boot.
+
+Abaixo estão os passos completos com o script atualizado e o arquivo de serviço Systemd para que você possa fazer a atualização:
+
+### Passo 1: Atualize e Movimente o Script (Ação no Servidor)
+
+Recomendo mover o script para um diretório mais apropriado para scripts de sistema, como `/usr/local/bin/`.
+
+**1.1. Script de Notificação (Arquivo: `/usr/local/bin/boot-notifier-telegram.sh`)**
+
+Copie e cole este conteúdo no novo arquivo. Observe que adicionei a variável `LOG_FILE` e a chamada `echo` para fins de depuração (debugging), caso o problema persista.
+
+```bash
+#!/bin/bash
+# Script para notificar o sucesso do boot via Telegram
+
+# --- Configurações de Log (Adicionado para Debug) ---
+LOG_FILE="/var/log/boot-notifier-telegram.log"
+echo "==================================================" >> $LOG_FILE
+echo "$(date): Script de notificação de boot iniciado." >> $LOG_FILE
+
+# --- Configurações do Telegram ---
+TOKEN="8367007877:AAE5Qemr0HG8ZApGwOR2HgkzC1UnxJjQtj0"
+CHAT_ID="6297344029"  # <-- VALOR PELO SEU CHAT ID REAL
+TELEGRAM_API="https://api.telegram.org/bot$TOKEN/sendMessage"
+
+# --- Dados do Servidor ---
+HOSTNAME=$(hostname)
+# O comando hostname -I pode retornar vários IPs, pegamos o primeiro (awk '{print $1}').
+IP_ADDRESS=$(hostname -I | awk '{print $1}')
+MENSAGEM="✅ *Reinicialização Concluída*
+*Servidor:* $HOSTNAME
+*IP:* $IP_ADDRESS
+*Data:* $(date)"
+
+# --- Enviar a Mensagem ---
+echo "$(date): Tentando enviar mensagem para o Telegram..." >> $LOG_FILE
+
+# O comando 'curl' armazena a resposta em CURL_OUTPUT para análise no log.
+CURL_OUTPUT=$(curl -s -X POST $TELEGRAM_API \
+      -d chat_id="$CHAT_ID" \
+      -d text="$MENSAGEM" \
+      -d parse_mode="Markdown")
+
+# Verifica se a chamada foi bem-sucedida (não garante que o Telegram enviou, mas confirma que o curl funcionou)
+if [ $? -eq 0 ]; then
+    echo "$(date): Chamada CURL concluída. Resposta (parcial): ${CURL_OUTPUT:0:100}..." >> $LOG_FILE
+else
+    echo "$(date): ERRO no comando CURL (código de saída $?). Resposta do CURL: $CURL_OUTPUT" >> $LOG_FILE
+fi
+
+echo "$(date): Fim do script de notificação." >> $LOG_FILE
+
+# Fim do script
+```
+
+**1.2. Execute os comandos para criar e dar permissão ao script:**
+
+```bash
+# Crie ou mova o arquivo (exemplo usando 'nano' para criar)
+sudo nano /usr/local/bin/boot-notifier-telegram.sh 
+# Cole o conteúdo acima
+
+# Dê permissão de execução
+sudo chmod +x /usr/local/bin/boot-notifier-telegram.sh
+```
+
+### Passo 2: Crie o Arquivo de Unidade Systemd (Ação no Servidor)
+
+Este arquivo é o que informa ao seu sistema operacional **quando** e **como** executar o script. O Systemd é o responsável por esperar a rede.
+
+**2.1. Arquivo de Serviço (Arquivo: `/etc/systemd/system/telegram-boot-notify.service`)**
+
+Crie o arquivo com o seguinte conteúdo:
+
+```ini
+[Unit]
+Description=Telegram Boot Notification
+# Garante que o script será executado APÓS a rede estar totalmente funcional.
+After=network.target
+
+[Service]
+# Tipo de serviço que executa um script e encerra.
+Type=oneshot
+# Caminho completo para o script criado no Passo 1.
+ExecStart=/usr/local/bin/boot-notifier-telegram.sh
+
+[Install]
+# Define o runlevel (estado do sistema) no qual o serviço deve ser habilitado.
+WantedBy=multi-user.target
+```
+
+**2.2. Execute os comandos para habilitar o serviço:**
+
+```bash
+# Crie o arquivo (exemplo usando 'nano')
+sudo nano /etc/systemd/system/telegram-boot-notify.service
+# Cole o conteúdo acima
+
+# Recarrega a configuração do Systemd para reconhecer o novo arquivo
+sudo systemctl daemon-reload
+
+# Habilita o serviço para iniciar no próximo boot
+sudo systemctl enable telegram-boot-notify.service
+
+# (Opcional) Remova o link antigo em /etc/init.d se ele existir e for usado pelo Systemd
+# sudo update-rc.d -f boot-notifier-telegram remove
+```
+
+### Passo 3: Teste e Verificação
+
+Após concluir o Passo 2, reinicie o servidor.
+
+1.  **Reinicie o Servidor:**
+
+    ```bash
+    sudo reboot
+    ```
+
+2.  **Verifique o Status (após o boot):**
+
+    ```bash
+    systemctl status telegram-boot-notify.service
+    ```
+
+    Você deve ver o status como `active (exited)` e as últimas linhas do log mostrando que ele foi executado.
+
+3.  **Verifique o Arquivo de Log (Para Debug):**
+    Se a notificação **não** chegar, verifique o log para entender onde o script parou:
+
+    ```bash
+    cat /var/log/boot-notifier-telegram.log
+    ```
+
+    O log deve mostrar a resposta do `curl`. Se o problema persistir, a resposta do `curl` dará a pista (ex: erro no token, chat ID inválido, etc.).
