@@ -729,3 +729,85 @@ Após concluir o Passo 2, reinicie o servidor.
     ```
 
     O log deve mostrar a resposta do `curl`. Se o problema persistir, a resposta do `curl` dará a pista (ex: erro no token, chat ID inválido, etc.).
+
+    ### -------------------------------------------------------------------------------------------------------------------------
+
+    O status **`Active: inactive (dead)`** indica que o serviço **foi executado e terminou com sucesso** na última inicialização, o que é o comportamento **esperado** para um serviço do tipo `Type=oneshot` (que executa uma única tarefa e se encerra), como o seu script de notificação. ✅
+
+O problema provavelmente não está no serviço Systemd, mas sim na **execução do script** ou no **envio do comando `curl`**.
+
+### 1\. Próximos Passos Essenciais (Onde está o erro?)
+
+Como o Systemd confirma que executou o script, o próximo passo é checar o arquivo de log que incluímos no *script* em `/usr/local/bin/boot-notifier-telegram`:
+
+**Comando para Verificar o Log:**
+
+```bash
+cat /var/log/boot-notifier-telegram.log
+```
+
+**O que procurar no Log:**
+
+  * **Script iniciado:** Confirma se o Systemd chamou o script.
+  * **Tentando enviar mensagem...:** Confirma que o *script* chegou na parte do `curl`.
+  * **Resposta do CURL (ou ERRO):** Esta é a informação mais importante.
+      * **Se mostrar um erro de *timeout* ou conexão:** O problema ainda pode ser a rede (embora `After=network.target` ajude, o Telegram pode estar inacessível por um momento).
+      * **Se mostrar uma resposta do Telegram (geralmente um JSON):** Se a resposta incluir um `error_code` ou `ok: false`, o problema é no **`TOKEN`** ou no **`CHAT_ID`**.
+
+-----
+
+### 2\. Confirmação do Service
+
+Para ter certeza de que o serviço está configurado corretamente para o próximo boot:
+
+| Item | Status | Significado |
+| :--- | :--- | :--- |
+| **`Loaded: loaded`** | OK | O Systemd encontrou o arquivo `.service`. |
+| **`enabled`** | OK | O serviço está configurado para iniciar automaticamente na inicialização. |
+| **`Active: inactive (dead)`** | OK | O serviço `Type=oneshot` (executa e encerra) finalizou. |
+
+Se o log não trouxer a resposta esperada, você pode tentar executar o script manualmente no seu terminal para ver a saída imediata e isolar o problema:
+
+```bash
+/usr/local/bin/boot-notifier-telegram
+```
+
+Se o `curl` funcionar manualmente, o problema está na diferença de ambiente durante o boot. Se falhar, o problema é nas suas credenciais (`TOKEN` ou `CHAT_ID`).
+
+# OBSERVAÇÂO e PASSO IMPORTANTE CASO NAÔ TENHA FEITO:
+
+Sim, **é altamente recomendável** que você faça esse passo de limpeza.
+
+### Por que você deve remover o script antigo (`/etc/init.d/boot-notifier-telegram`)?
+
+1.  **Evitar Dupla Execução:**
+
+      * Se você não o remover, o sistema pode tentar executá-lo usando o método SysVinit *e* executar o novo serviço Systemd (`telegram-boot-notify.service`).
+      * Resultado: Você receberia **duas notificações no Telegram** após cada reinicialização, o que é redundante.
+
+2.  **Manter a Organização e Evitar Confusão:**
+
+      * Você criou uma solução moderna e robusta com o Systemd (que tem controle sobre a ordem de inicialização, como esperar a rede).
+      * Manter a versão antiga em `/etc/init.d/` cria uma "solução zumbi" que poderia ser acidentalmente reativada ou causar confusão para você ou outros administradores no futuro.
+
+### Comandos de Limpeza Sugeridos:
+
+Você deve desabilitar o script do SysVinit (se ele foi habilitado) e depois removê-lo.
+
+1.  **Desabilitar o Script (Remover Links de Inicialização):**
+
+    Se você o habilitou originalmente com `update-rc.d`, use este comando:
+
+    ```bash
+    sudo update-rc.d -f boot-notifier-telegram remove
+    ```
+
+    *(Este comando apenas remove os links simbólicos de inicialização; ele não remove o arquivo original do `/etc/init.d/`.)*
+
+2.  **Remover o Arquivo Original:**
+
+    ```bash
+    sudo rm /etc/init.d/boot-notifier-telegram
+    ```
+
+Ao fazer isso, você garante que apenas a sua nova e melhorada solução Systemd será responsável por notificar o boot.
