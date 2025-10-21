@@ -811,3 +811,73 @@ Você deve desabilitar o script do SysVinit (se ele foi habilitado) e depois rem
     ```
 
 Ao fazer isso, você garante que apenas a sua nova e melhorada solução Systemd será responsável por notificar o boot.
+
+# -----------------------------------------------------------------------------
+# Testando tudo.
+
+Ótimo\! Você não precisa reiniciar o servidor inteiro para testar o script e a funcionalidade de log.
+
+Você pode usar os comandos do Systemd e de execução manual.
+
+### 1\. Limpar o Log de Teste
+
+Antes de executar, limpe o log anterior para ter certeza de que o novo teste está gerando novas entradas:
+
+```bash
+# Limpa o conteúdo do arquivo de log
+sudo truncate -s 0 /var/log/boot-notifier-telegram.log
+
+# Opcional: verifique se está vazio
+cat /var/log/boot-notifier-telegram.log 
+```
+
+### 2\. Testar o Serviço Systemd (Simulando um Início de Boot)
+
+Você pode pedir ao Systemd para *iniciar* o serviço, simulando o que acontece durante a reinicialização.
+
+**Comando:**
+
+```bash
+sudo systemctl start telegram-boot-notify.service
+```
+
+**O que deve acontecer:**
+
+1.  Você deve receber uma **mensagem no Telegram** em poucos segundos.
+2.  O serviço será executado e logo voltará ao status `inactive (dead)`.
+3.  As entradas de log serão criadas.
+
+### 3\. Verificar o Status do Serviço
+
+Verifique o status do serviço logo após a execução para confirmar que ele finalizou corretamente:
+
+```bash
+systemctl status telegram-boot-notify.service
+```
+
+O status deve ser novamente `Active: inactive (dead)`.
+
+### 4\. Verificar o Conteúdo do Log
+
+Este é o passo crucial para confirmar que o script está pegando o IP, a data e, mais importante, a **resposta do servidor do Telegram**.
+
+**Comando:**
+
+```bash
+cat /var/log/boot-notifier-telegram.log
+```
+
+**Saída Esperada (exemplo):**
+
+```
+==================================================
+Ter Out 21 08:15:30 -03 2025: Script de notificação de boot iniciado.
+Ter Out 21 08:15:30 -03 2025: Tentando enviar mensagem para o Telegram...
+Ter Out 21 08:15:31 -03 2025: Chamada CURL concluída. Resposta (parcial): {"ok":true,"result":{"message_id":1234,"from":{"id":...}}}...
+Ter Out 21 08:15:31 -03 2025: Fim do script de notificação.
+```
+
+  * **Se você vir `{"ok":true...}` na resposta:** O script, as credenciais e o `curl` estão funcionando perfeitamente.
+  * **Se você vir uma mensagem de erro do CURL ou `{"ok":false...}`:** Há um problema com o seu Token ou Chat ID, ou a rede (improvável, pois você está online agora).
+
+Se tudo funcionar, você pode prosseguir com a limpeza do script antigo e a reinicialização completa.
