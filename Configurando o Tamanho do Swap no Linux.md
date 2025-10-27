@@ -464,3 +464,108 @@ cat /proc/sys/vm/swappiness
 Seu sistema agora está **muito melhor configurado** para ficar ligado por dias. O swap de 15GB é mais que suficiente para suas necessidades e deve prevenir travamentos mesmo sob carga pesada.
 
 **A diferença de 15GB vs 16GB é irrelevante na prática** - o importante é que você tem swap suficiente agora! 🚀
+
+# Swappiness: O Que É e Como Ajuda
+
+## 🔍 **O Que é Swappiness?**
+
+**Swappiness** é um parâmetro do kernel Linux (0-100) que controla a **tendência** do sistema de usar swap vs RAM.
+
+```bash
+# Ver valor atual
+cat /proc/sys/vm/swappiness
+# Valores típicos: 60 (padrão), 10 (baixo), 100 (muito agressivo)
+```
+
+## 📊 **Como Funciona na Prática:**
+
+### **Valor Alto (swappiness=60-100):**
+- ❌ **Mais agressivo** com swap
+- ❌ Move memória para swap **mais cedo**
+- ❌ Pode causar **lentidão desnecessária**
+
+### **Valor Baixo (swappiness=1-30):**
+- ✅ **Mais conservador** com swap
+- ✅ Só usa swap quando **realmente necessário**
+- ✅ Mantém dados na **RAM (mais rápida)**
+
+## 🎯 **No Seu Caso Específico:**
+
+### **Antes (swappiness=60 padrão):**
+```bash
+Mem.: 7,7Gi - 6,6Gi usado | Swap: 2,0Gi - 2,0Gi usado
+```
+❌ **Problema**: Sistema usando swap mesmo com RAM disponível
+
+### **Agora (swappiness=10 recomendado):**
+```bash
+Mem.: 7,7Gi - 3,6Gi usado | Swap: 15Gi - 0B usado
+```
+✅ **Solução**: Sistema prioriza RAM, só usa swap em emergências
+
+## ⚙️ **Como Ajustar:**
+
+```bash
+# Alterar temporariamente
+sudo sysctl vm.swappiness=10
+
+# Alterar permanentemente
+echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+```
+
+## 🚀 **Benefícios para Você:**
+
+### **1. Performance Melhor:**
+- Dados ficam na **RAM (nanosegundos)** vs **SSD/HDD (milisegundos)**
+- Aplicações abrem e respondem **mais rápido**
+
+### **2. Uso Inteligente de Recursos:**
+```bash
+# Com swappiness=10 o sistema só usa swap quando:
+# - RAM está realmente cheia (>90%)
+# - Aplicações inativas há muito tempo
+```
+
+### **3. Menor Desgaste (se usar SSD):**
+- Menos escrita no disco → **SSD dura mais**
+
+### **4. Estabilidade:**
+- Evita **swap excessivo** que causa lentidão
+- Só recorre ao swap em **casos necessários**
+
+## 📈 **Cenários Práticos:**
+
+### **Quando swappiness=10 é ideal:**
+- ✅ **Desktop com SSD** - seu caso!
+- ✅ **Sistemas com RAM suficiente** - você tem 7.7GB
+- ✅ **Workstations** que precisam de resposta rápida
+
+### **Quando swappiness mais alto é melhor:**
+- ❌ Servidores com muita RAM ociosa
+- ❌ Sistemas com pouca RAM que precisam evitar OOM Killer
+
+## 🔧 **Configuração Complementar:**
+
+```bash
+# Ajustar também o vfs_cache_pressure
+echo 'vm.vfs_cache_pressure=50' | sudo tee -a /etc/sysctl.conf
+
+# Aplicar
+sudo sysctl -p
+```
+
+## 📊 **Monitoramento:**
+
+```bash
+# Ver eficácia da configuração
+watch -n 2 'free -h && echo "Swappiness: $(cat /proc/sys/vm/swappiness)"'
+```
+
+## 💡 **Resumo:**
+**Swappiness=10** faz seu sistema ser **"esperto"** sobre quando usar swap:
+- Mantém tudo na **RAM** para máximo desempenho
+- Só usa **swap** como **plano B** em situações críticas
+- **Evita lentidão desnecessária** por uso prematuro de swap
+
+No seu caso específico, essa configuração vai garantir que os 15GB de swap sejam usados **apenas quando realmente necessário**, mantendo a performance do sistema máxima! 🚀
