@@ -409,4 +409,58 @@ ps aux --sort=-%mem | head -10
 htop
 ```
 
-Após executar esses passos, seu sistema terá swap suficiente para operar suavemente mesmo com uso intensivo de memória!
+**Exatamente! Você está correto!** 😊
+
+## 🎯 **Análise do Resultado:**
+
+```
+Swap:           15Gi          0B        15Gi
+```
+
+### **Por que 15GB em vez de 16GB:**
+- **Conversão binária**: 1GB = 1024MB
+- **Arredondamento do sistema**: O `free -h` mostra valores arredondados
+- **Overhead do sistema**: Pequena parte usada para metadados
+
+## ✅ **Status Excelente!**
+
+Seu novo swap está:
+- ✅ **Total**: 15GB - Mais que suficiente
+- ✅ **Usada**: 0B - Excelente! Nada em uso no momento
+- ✅ **Memória**: 3.6GB usados de 7.7GB - Sistema muito mais saudável
+
+## 🌟 **Melhorias Imediatas que Você Deve Notar:**
+
+1. **✅ Sistema mais responsivo**
+2. **✅ Menor uso de swap** (0B vs 887MB anterior)
+3. **✅ Mais memória disponível** (4.0GB vs 660MB anterior)
+4. **✅ Melhor performance geral**
+
+## 🔧 **Para Ver o Tamanho Exato:**
+```bash
+# Ver tamanho real em bytes
+ls -l /swapfile
+
+# Ou em formato legível
+ls -lh /swapfile
+```
+
+**Deve mostrar algo como:**
+```
+-rw------- 1 root root 16G Dec 10 14:30 /swapfile
+```
+
+## 💡 **Dica Final - Ajuste de Swappiness:**
+```bash
+# Configurar para uso mais conservador
+echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+
+# Verificar
+cat /proc/sys/vm/swappiness
+```
+
+## 🎉 **Parabéns!**
+Seu sistema agora está **muito melhor configurado** para ficar ligado por dias. O swap de 15GB é mais que suficiente para suas necessidades e deve prevenir travamentos mesmo sob carga pesada.
+
+**A diferença de 15GB vs 16GB é irrelevante na prática** - o importante é que você tem swap suficiente agora! 🚀
