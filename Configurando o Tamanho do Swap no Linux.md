@@ -228,4 +228,185 @@ watch -n 1 'free -h && echo "---" && swapon --show'
 4. **SSDs**: Swap em SSD é mais rápido, mas causa mais desgaste
 5. **RAID**: Considere swap em múltiplos dispositivos para performance
 
-Esta configuração garantirá que seu sistema tenha swap adequado para operar suavemente mesmo após dias ligado!
+# Aumentando o Swap para 16GB
+
+## 📋 **Passos para Aumentar o Swap**
+
+### 1. **Verificar configuração atual**
+```bash
+# Ver detalhes do swap atual
+swapon --show
+cat /proc/swaps
+ls -lh /swapfile
+```
+
+### 2. **Desativar o swap atual**
+```bash
+# Desativar swap
+sudo swapoff /swapfile
+
+# Verificar se foi desativado
+free -h
+```
+
+### 3. **Aumentar o arquivo de swap para 16GB**
+```bash
+# Remover arquivo antigo
+sudo rm /swapfile
+
+# Criar novo arquivo de 16GB
+sudo fallocate -l 16G /swapfile
+
+# Verificar criação
+ls -lh /swapfile
+```
+
+### 4. **Configurar o novo arquivo de swap**
+```bash
+# Configurar permissões
+sudo chmod 600 /swapfile
+
+# Formatar como área de swap
+sudo mkswap /swapfile
+
+# Ativar o novo swap
+sudo swapon /swapfile
+```
+
+### 5. **Verificar se está funcionando**
+```bash
+# Verificar novo swap
+free -h
+swapon --show
+
+# Deve mostrar aproximadamente 16GB
+```
+
+## ⚙️ **Script Automatizado para Aumentar**
+
+### **Criar script:**
+```bash
+#!/bin/bash
+# increase-swap.sh
+
+echo "Aumentando swap para 16GB..."
+
+# Desativar swap atual
+echo "Desativando swap atual..."
+sudo swapoff /swapfile
+
+# Remover arquivo antigo
+echo "Removendo arquivo swap antigo..."
+sudo rm /swapfile
+
+# Criar novo de 16GB
+echo "Criando novo arquivo de swap de 16GB..."
+sudo fallocate -l 16G /swapfile
+
+# Configurar
+echo "Configurando novo swap..."
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# Verificar
+echo "Verificando nova configuração:"
+free -h
+swapon --show
+
+echo "Concluído! Swap aumentado para 16GB."
+```
+
+### **Executar:**
+```bash
+# Dar permissão e executar
+chmod +x increase-swap.sh
+./increase-swap.sh
+```
+
+## 🔧 **Configurações Adicionais Recomendadas**
+
+### **Ajustar swappiness (opcional)**
+```bash
+# Ver valor atual
+cat /proc/sys/vm/swappiness
+
+# Configurar para valor mais baixo (recomendado com 16GB swap)
+echo 'vm.swappiness=10' | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+```
+
+### **Verificar se está no fstab**
+```bash
+# Verificar se o swap está configurado para inicializar
+cat /etc/fstab | grep swap
+
+# Se não estiver, adicionar:
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+## 📊 **Verificação Final**
+
+### **Comandos para confirmar:**
+```bash
+# Verificar memória e swap
+free -h
+
+# Ver detalhes do swap
+swapon --show
+
+# Verificar uso em tempo real
+watch -n 2 'free -h && echo "---" && swapon --show'
+```
+
+### **Resultado esperado:**
+```
+               total       usada       livre
+Mem.:          7,7Gi       6.xGi        x.xGi
+Swap:          16,0Gi       x.xGi       x.xGi
+```
+
+## ⚠️ **Possíveis Problemas e Soluções**
+
+### **Se encontrar erro de "fallocate failed":**
+```bash
+# Usar dd como alternativa
+sudo dd if=/dev/zero of=/swapfile bs=1G count=16 status=progress
+```
+
+### **Se o swap não ativar:**
+```bash
+# Verificar se o arquivo foi criado corretamente
+ls -lh /swapfile
+
+# Refazer o mkswap
+sudo mkswap -f /swapfile
+```
+
+### **Se não persistir após reinício:**
+```bash
+# Verificar fstab
+cat /etc/fstab
+
+# Adicionar se necessário
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+## 💡 **Dicas para seu Caso Específico:**
+
+Com **7.7GB de RAM** e **2GB de swap totalmente usado**, aumentar para **16GB** é uma boa estratégia. Recomendo também:
+
+1. **Swappiness baixo**: `vm.swappiness=10` para priorizar RAM
+2. **Monitorar processos**: Identificar o que está consumindo tanta RAM/swap
+3. **Considerar upgrade de RAM**: Se você frequentemente usa todo o swap
+
+### **Monitorar consumo:**
+```bash
+# Ver processos consumindo mais memória
+ps aux --sort=-%mem | head -10
+
+# Monitorar em tempo real
+htop
+```
+
+Após executar esses passos, seu sistema terá swap suficiente para operar suavemente mesmo com uso intensivo de memória!
