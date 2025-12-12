@@ -62,4 +62,45 @@ Se você quiser que esse app apareça quando você aperta a tecla "Super" (Windo
 1.  Copie esse mesmo arquivo `.desktop`.
 2.  Cole-o na pasta: `/home/seu_usuario/.local/share/applications/`
 
-**Gostaria que eu montasse o conteúdo do arquivo para você?** Se sim, basta me colar aqui o caminho completo de onde está a pasta da sua aplicação.
+---
+
+# Erro Comum. Criar como usuário _SUDO_
+
+Exatamente\! **Você matou a charada.**
+
+O problema é exatamente esse: como você criou o arquivo usando `sudo` (superusuário/root), o arquivo pertence ao "dono do sistema" e não ao seu usuário (`shaffer443`). Por segurança, a interface gráfica do Ubuntu não deixa o seu usuário comum alterar permissões de um arquivo que pertence ao `root`.
+
+Aquele **"X" vermelho** no ícone lá atrás também é um indicativo de que seu usuário não tem permissão total sobre o arquivo ou que ele não é confiável.
+
+### Como resolver (Pelo Terminal)
+
+Você precisa "tomar posse" do arquivo de volta para o seu usuário. Abra o terminal e rode estes dois comandos:
+
+1.  **Trocar o dono do arquivo (de root para você):**
+
+    ```bash
+    sudo chown shaffer443:shaffer443 "/home/shaffer443/Área de Trabalho/laybackbots.desktop"
+    ```
+
+    *(Isso diz: "Superusuário, mude o dono (chown) para shaffer443 e o grupo para shaffer443 neste arquivo".)*
+
+2.  **Dar permissão de execução (só para garantir):**
+
+    ```bash
+    chmod +x "/home/shaffer443/Área de Trabalho/laybackbots.desktop"
+    ```
+
+### O que fazer depois?
+
+Assim que você rodar o primeiro comando, aquele ícone de "cadeado" ou as opções cinzas na janela de propriedades devem ser liberadas.
+
+1.  Feche essa janela de propriedades da imagem.
+2.  Vá na Área de Trabalho.
+3.  Clique com o botão direito no ícone.
+4.  Agora a opção **"Permitir Iniciar"** (Allow Launching) deve aparecer no menu de contexto (ou você poderá ativar aquela chave na janela de propriedades).
+
+-----
+
+**Dica Extra:** Se mesmo após isso ele não abrir, o problema estará no conteúdo do texto dentro do arquivo (algum caminho errado na linha `Exec=` ou `Path=`).
+
+Deu certo a liberação da permissão?
